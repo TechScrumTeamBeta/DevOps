@@ -1,0 +1,37 @@
+- name: Jenkins Slave Setup
+  hosts: jenkins-slave
+  become: true
+  become_user: root
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Java
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Download Jenkins agent JAR file to Windows
+      win_get_url:
+        url: "http://3.104.98.22:8080/jnlpJars/agent.jar"
+        dest: "C:\\Users\\kanta\\Downloads\\agent.jar"
+
+    - name: Transfer agent.jar to WSL
+      win_shell: mv "C:\\Users\\kanta\\Downloads\\agent.jar" "/mnt/c/Users/kanta/Downloads/agent.jar"
+
+    - name: Move agent.jar to desired WSL location
+      command: mv "/mnt/c/Users/kanta/Downloads/agent.jar" "/home/shangchewang/agent.jar"
+      become_user: ubuntu
+
+    - name: Create Jenkins agent directory
+      command: mkdir -p "/home/shangchewang/jenkins-agent"
+      become_user: ubuntu
+
+    - name: Configure Jenkins agent
+      command: >
+        java -jar "/home/shangchewang/agent.jar"
+        -jnlpUrl https://3.104.98.22/jenkins_slave/slave-agent.jnlp
+        -secret "{{ jenkins_secret }}"
+        -workDir "/var/lib/jenkins"
+      become_user: ubuntu
