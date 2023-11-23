@@ -14,20 +14,20 @@ provider "aws" {
   region = "ap-southeast-2"
 }
 
-resource "aws_ecs_cluster" "your_cluster" {
-  name = "your-ecs-cluster-name"
+resource "aws_ecs_cluster" "techScrumCluster" {
+  name = "techScrumCluster"
 }
 
-resource "aws_ecs_task_definition" "your_task_definition" {
-  family                   = "your-task-family"
+resource "aws_ecs_task_definition" "techScrum-dev" {
+  family                   = "techScrum-dev"
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
   
   container_definitions = jsonencode([
     {
-      name      = "your-container-name"
-      image     = "your-docker-image-url"
+      name      = "techscrum-be"
+      image     = "650635451238.dkr.ecr.us-east-1.amazonaws.com/techscrum-be"
       cpu       = 256
       memory    = 512
       portMappings = [
@@ -41,9 +41,9 @@ resource "aws_ecs_task_definition" "your_task_definition" {
   ])
 }
 
-resource "aws_ecs_service" "your_service" {
-  name            = "your-ecs-service"
-  cluster         = "your-ecs-cluster-name"
+resource "aws_ecs_service" "techScrumBackend" {
+  name            = "techScrumBackend"
+  cluster         = "techScrumCluster"
   task_definition = aws_ecs_task_definition.your_task_definition.arn
   launch_type     = "FARGATE"
   
