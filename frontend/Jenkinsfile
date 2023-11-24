@@ -3,8 +3,8 @@ pipeline {
 
     parameters {
         string(name: 'AWS_CREDENTIAL_ID', defaultValue: 'markwang access', description: 'The ID of the AWS credentials to use')
-        string(name: 'S3_BUCKET', defaultValue: 'markwangbucket', description: 'The name of the S3 bucket to deploy to')
-        string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'The Git branch to build and deploy')
+        string(name: 'S3_BUCKET', defaultValue: 'techscrumbucket', description: 'The name of the S3 bucket to deploy to')
+        string(name: 'GIT_BRANCH', defaultValue: 'feature/devops-mark2', description: 'The Git branch to build and deploy')
     }
 
     environment {
@@ -16,7 +16,7 @@ pipeline {
             steps {
                 script {
                     // Checkout the specified branch
-                    checkout([$class: 'GitSCM', branches: [[name: params.GIT_BRANCH]], userRemoteConfigs: [[url: 'https://github.com/shangchewang/DevOps-Techscrum.fe.git']]])
+                    checkout([$class: 'GitSCM', branches: [[name: params.GIT_BRANCH]], userRemoteConfigs: [[url: 'https://github.com/TechScrumTeamBeta/DevOps-Techscrum.fe']]])
                 }
             }
         }
