@@ -1,0 +1,57 @@
+---
+- name: Jenkins Slave Setup
+  hosts: jenkins-slave
+  become: true
+  become_user: root
+  tasks:
+    - name: Run apt-get update
+      command: apt-get update
+
+    - name: Install fontconfig (dependency for OpenJDK)
+      apt:
+        name: fontconfig
+        state: present
+
+    - name: Install OpenJDK 17 JRE
+      apt:
+        name: openjdk-17-jre
+        state: present
+
+    - name: Download Jenkins key to keyrings
+      get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+        mode: '0644'
+
+    - name: Add Jenkins repository to APT sources
+      blockinfile:
+        path: /etc/apt/sources.list.d/jenkins.list
+        block: |
+          deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+        create: yes
+
+    - name: Run apt-get update after adding repository
+      command: apt-get update
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Enable Jenkins service to start at boot
+      systemd:
+        name: jenkins
+        enabled: yes
+
+    - name: Start Jenkins service
+      systemd:
+        name: jenkins
+        state: started
+
+    - name: Check Jenkins service status
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes
+        daemon_reload: yes
+        
