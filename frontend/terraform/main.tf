@@ -11,7 +11,7 @@ resource "aws_instance" "jenkins_master" {
   key_name      = "keypaircicd"  
 
  lifecycle {
-    ignore_changes = ["public_ip"]
+    ignore_changes = [public_ip]
   }
 }
 
@@ -23,7 +23,7 @@ resource "aws_instance" "jenkins_slave" {
   key_name      = "cicdkeypair"  
 
  lifecycle {
-    ignore_changes = ["public_ip"]
+    ignore_changes = [public_ip]
   }
   
 }
@@ -32,17 +32,14 @@ resource "aws_s3_bucket" "jenkins_bucket" {
   bucket = var.jenkins_bucket_name
 }
 
-resource "aws_s3_bucket_acl" "jenkins_bucket_acl" {
-  bucket = aws_s3_bucket.jenkins_bucket.id
-  acl    = "private"
-}
+
 
 resource "aws_s3_bucket_versioning" "jenkins_bucket_versioning" {
   bucket = aws_s3_bucket.jenkins_bucket.id
 
   versioning_configuration {
-    status = "Enabled"
-  }
+    status = var.jenkins_bucket_versioning_enabled ? "Enabled" : "Suspended"
+}
 }
 
 resource "aws_security_group_rule" "jenkins_tcp_8080" {
