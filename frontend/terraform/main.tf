@@ -33,7 +33,6 @@ resource "aws_s3_bucket" "jenkins_bucket" {
 }
 
 
-
 resource "aws_s3_bucket_versioning" "jenkins_bucket_versioning" {
   bucket = aws_s3_bucket.jenkins_bucket.id
 
