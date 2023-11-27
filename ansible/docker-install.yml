@@ -1,0 +1,58 @@
+---
+- name: Install Docker on EC2
+  hosts: jenkins-master
+  become: yes
+  tasks:
+    - name: Set up Docker's apt repository
+      become: yes
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - ca-certificates
+          - curl
+          - gnupg
+
+    - name: Add Docker's official GPG key
+      become: yes
+      shell: |
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    - name: Add the repository to Apt sources
+      become: yes
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    - name: Update Apt sources
+      become: yes
+      apt:
+        update_cache: yes
+
+    - name: Install Docker packages
+      become: yes
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+
+    - name: Verify Docker Engine installation with hello-world image
+      become: yes
+      shell: sudo docker run hello-world
+
+    - name: Enable and start Docker service
+      become: yes
+      service:
+        name: docker
+        state: started
+        enabled: yes
