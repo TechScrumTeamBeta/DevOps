@@ -1,10 +1,9 @@
 pipeline {
-    agent any
-
+    agent { label 'jenkins_slave' }
     parameters {
         string(name: 'AWS_CREDENTIAL_ID', defaultValue: 'markwang access', description: 'The ID of the AWS credentials to use')
         string(name: 'S3_BUCKET', defaultValue: 'techscrumbucket', description: 'The name of the S3 bucket to deploy to')
-        string(name: 'GIT_BRANCH', defaultValue: 'feature/devops-mark2', description: 'The Git branch to build and deploy')
+        string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'The Git branch to build and deploy')
     }
 
     environment {
