@@ -1,10 +1,10 @@
 pipeline {
-    agent any
+     agent { label 'jenkins_slave' }
 
     parameters {
         string(name: 'AWS_CREDENTIAL_ID', defaultValue: 'markwang access', description: 'The ID of the AWS credentials to use')
-        string(name: 'ECS_CLUSTER', defaultValue: 'ecscluster11120', description: 'The name of the ECS cluster')
-        string(name: 'ECS_SERVICE', defaultValue: 'backend-ecs-service', description: 'The name of the ECS service')
+        string(name: 'ECS_CLUSTER', defaultValue: 'techscrum_ecs_cluster', description: 'The name of the ECS cluster')
+        string(name: 'ECS_SERVICE', defaultValue: 'techscrum_ecs_service', description: 'The name of the ECS service')
         string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'The Git branch to build and deploy')
     }
 
@@ -13,15 +13,20 @@ pipeline {
         DOCKER_IMAGE_NAME = 'techscrum'
         DOCKER_IMAGE_TAG = 'latest'
         DOCKERFILE_PATH = '.'
-        ECR_REPO_URL = '842279851978.dkr.ecr.ap-southeast-2.amazonaws.com/backend_ecr' // Update with your ECR repository URL
+        ECR_REPO_URL = '650635451238.dkr.ecr.ap-southeast-2.amazonaws.com/techscrum_backend_ecr' // Update with your ECR repository URL
 
     }
+      
+      tools {
+        nodejs 'jenkinsnode'
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 script {
                     // Checkout the specified branch from GitHub
-                    checkout([$class: 'GitSCM', branches: [[name: params.GIT_BRANCH]], userRemoteConfigs: [[url: 'https://github.com/shangchewang/DevOps-Techscrum.be.git']]])
+                    checkout([$class: 'GitSCM', branches: [[name: params.GIT_BRANCH]], userRemoteConfigs: [[url: 'https://github.com/TechScrumTeamBeta/DevOps-Techscrum.be.git']]])
                 }
             }
         }
@@ -77,16 +82,22 @@ pipeline {
                 }
             }
         }
-    }
-
-    post {
-        success {
-            echo 'Deployment successful!'
-            slackSend (color: '#00FF00', message: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-        }
-        failure {
-            echo 'Deployment failed!'
-            slackSend (color: '#FF0000', message: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-        }
-    }
-}
+               stage('Send Notification') {
+            steps {
+                script {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                            credentialsId: params.AWS_CREDENTIAL_ID
+                        ]]) {
+                            def snsTopicArn = "arn:aws:sns:ap-southeast-2:650635451238:app_notification"
+                            sh "aws sns publish --topic-arn ${snsTopicArn} --message 'test result' --subject 'Notification' --region ap-southeast-2"
+                        }
+                    }
+                }
+            }
+         }
+      }
+   }

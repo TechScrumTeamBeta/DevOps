@@ -19,6 +19,7 @@ This README provides instructions and guidelines for using and customizing the J
 - **DOCKER_IMAGE_TAG**: Tag for the Docker image.
 - **DOCKERFILE_PATH**: Path to the Dockerfile.
 - **ECR_REPO_URL**: URL of your Amazon ECR repository.
+- **SNS topic ARN**: Adjust the SNS topic ARN and message content in the 'Send Notification' stage as needed.
 
 ## Pipeline Customization
 ### Checkout Stage
@@ -38,7 +39,7 @@ This README provides instructions and guidelines for using and customizing the J
 - Check ECS cluster and service names for correct deployment.
 
 ## Post-Deployment Actions
-- Slack Notifications: Update Slack notifications with the correct channel or messaging format if needed.
+- Send Notification: Sends a notification to an SNS topic in case of failure.
 
 ## Running the Pipeline
 - Instructions on how to trigger the pipeline in Jenkins and provide necessary parameters.
@@ -47,3 +48,9 @@ This README provides instructions and guidelines for using and customizing the J
 - Additional information, notes, or best practices related to managing and maintaining this Jenkins pipeline.
 
 Feel free to adapt and modify this Jenkins README according to your project's needs and specific use cases.
+
+
+
+
+
+
