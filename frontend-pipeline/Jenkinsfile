@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'AWS_CREDENTIAL_ID', defaultValue: 'markwang access', description: 'The ID of the AWS credentials to use')
+        string(name: 'S3_BUCKET', defaultValue: 'techscrumbucket', description: 'The name of the S3 bucket to deploy to')
+        string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'The Git branch to build and deploy')
+    }
+
+    environment {
+        AWS_DEFAULT_REGION = 'ap-southeast-2'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    // Checkout the specified branch
+                    checkout([$class: 'GitSCM', branches: [[name: params.GIT_BRANCH]], userRemoteConfigs: [[url: 'https://github.com/TechScrumTeamBeta/DevOps-Techscrum.fe']]])
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm install --force'
+                sh 'npm run build'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                    credentialsId: params.AWS_CREDENTIAL_ID
+                ]]) {
+                    script {
+                        // Assuming your build artifacts are in the 'build/' directory
+                        sh "aws s3 sync build/ s3://${params.S3_BUCKET}/"
+                    }
+                }
+            }
+        }
+
+        stage('Send Notification') {
+            steps {
+                script {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                            credentialsId: params.AWS_CREDENTIAL_ID
+                        ]]) {
+                            def snsTopicArn = "arn:aws:sns:ap-southeast-2:650635451238:app_notification"
+                            sh "aws sns publish --topic-arn ${snsTopicArn} --message 'test result' --subject 'Notification' --region ap-southeast-2"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
