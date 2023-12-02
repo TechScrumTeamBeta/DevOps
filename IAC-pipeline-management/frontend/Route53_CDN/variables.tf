@@ -5,10 +5,15 @@ variable "my_aws_region" {
 
 variable "my_domain_name" {
   description = "Domain name to be used"
-  default     = "DevOps"
+  default     = "techscrumjr11.com"
 }
 
-variable "my_application_origin_domain" {
-  description = "Application's origin domain"
-  default     = "www.example.com"  # Replace with your application's origin domain
+variable "my_subdomain_name" {
+  description = "Subdomain name (if any)"
+  default     = "DevOps"  # Replace with your desired subdomain name, or leave it empty for the root domain
+}
+
+variable "my_existing_bucket_name" {
+  description = "Name of the existing S3 bucket"
+  default     = "techscrumbucket"  # Replace with the name of your existing S3 bucket
 }
