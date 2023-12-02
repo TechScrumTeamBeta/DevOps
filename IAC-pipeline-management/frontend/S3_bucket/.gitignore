@@ -1,4 +1,4 @@
 # Ignore Terraform variable file
-terraform.tfvars
+terraforms.tfvars
 .terraform/providers/registry.terraform.io
 .terraform.lock.hcl
