@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the code from the repository
+                git credentialsId: 'Jenkins-Github-SSH', url: 'https://github.com/TechScrumTeamBeta/DevOps.git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('DevOps/IAC-pipeline-management') {
+                    // Initialize Terraform (install providers, modules, etc.)
+                    sh 'terraform init -input=false -backend-config=backend.tfvars'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('DevOps/IAC-pipeline-management') {
+                    // Generate and display the Terraform execution plan
+                    sh 'terraform plan -input=false -var-file=variables.tfvars -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            when {
+                // Define conditions for applying changes (e.g., manual approval, specific branch, etc.)
+                expression { return params.APPLY_CHANGES == 'true' }
+            }
+            steps {
+                dir('DevOps/IAC-pipeline-management') {
+                    // Apply the changes (deployment)
+                    withCredentials([
+                        [
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                            credentialsId: 'your-AWS-credentials-ID'
+                        ]
+                    ]) {
+                        input message: 'Proceed to apply changes?', ok: 'Deploy'
+                        sh 'terraform apply -input=false tfplan'
+                    }
+                }
+            }
+        }
+    }
+}
