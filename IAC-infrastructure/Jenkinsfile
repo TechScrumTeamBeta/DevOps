@@ -1,50 +1,28 @@
 pipeline {
     agent any
-
+    parameters {
+        string(name: 'AWS_CREDENTIAL_ID', defaultValue: 'markwang access', description: 'The ID of the AWS credentials to use')
+        string(name: 'GIT_BRANCH', defaultValue: 'feature/devops-mark2', description: 'The Git branch to build and deploy')
+    }
     stages {
-        stage('Checkout') {
+        stage('IAC_management') {
             steps {
-                // Checkout the code from the repository
-                git credentialsId: 'Jenkins-Github-SSH', url: 'https://github.com/TechScrumTeamBeta/DevOps.git'
-            }
-        }
-
-        stage('Terraform Init') {
-            steps {
-                dir('DevOps/IAC-pipeline-management') {
-                    // Initialize Terraform (install providers, modules, etc.)
-                    sh 'terraform init -input=false -backend-config=backend.tfvars'
-                }
-            }
-        }
-
-        stage('Terraform Plan') {
-            steps {
-                dir('DevOps/IAC-pipeline-management') {
-                    // Generate and display the Terraform execution plan
-                    sh 'terraform plan -input=false -var-file=variables.tfvars -out=tfplan'
-                }
-            }
-        }
-
-        stage('Terraform Apply') {
-            when {
-                // Define conditions for applying changes (e.g., manual approval, specific branch, etc.)
-                expression { return params.APPLY_CHANGES == 'true' }
-            }
-            steps {
-                dir('DevOps/IAC-pipeline-management') {
-                    // Apply the changes (deployment)
-                    withCredentials([
-                        [
-                            $class: 'AmazonWebServicesCredentialsBinding',
-                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                            credentialsId: 'your-AWS-credentials-ID'
-                        ]
+                script {
+                    withCredentials([ 
+                        [$class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: params.AWS_CREDENTIAL_ID,
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
                     ]) {
-                        input message: 'Proceed to apply changes?', ok: 'Deploy'
-                        sh 'terraform apply -input=false tfplan'
+                        // Clone the repository and checkout the correct branch
+                        git branch: params.GIT_BRANCH, url: 'https://github.com/TechScrumTeamBeta/DevOps.git'
+                        
+                        // Change to the correct directory
+                        dir('IAC_pipeline_test') {
+                            sh 'terraform init'
+                            sh 'terraform plan'
+                            sh 'terraform apply --auto-approve'
+                        }
                     }
                 }
             }
