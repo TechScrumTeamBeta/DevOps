@@ -1,2 +1,1 @@
-# DevOps
-Repo for DevOps team
+# This is a documentation ONLY repo
